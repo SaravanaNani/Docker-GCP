@@ -1,0 +1,20 @@
+pipeline {
+    agent any
+        stages{
+            stage('pulling image from GCS'){
+                steps{
+                    googleStorageDownload bucketUri: '$OBJECT - gsutil URI', credentialsId: 'JSON-KEY-ID', localDirectory: '.'
+                }
+            }
+            stage('Untar the image') {
+                steps {
+                    sh 'docker load -i $IMAGE_FILE.tar' //IMAGE_FILE: Your file name (object name) in the bucket. 
+                }
+            }
+            stage('Deploying to Container'){
+                steps{
+                    sh 'docker run -itd --name $CONTAINER_NAME -p 8083:8080 IMAGE:TAG' //IMAGE:TAG: Untar Image_name:tag
+            }
+        }
+    }
+}
