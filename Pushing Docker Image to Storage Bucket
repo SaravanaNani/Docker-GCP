@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    stages{
+        stage('checkout') {
+            steps{
+                git branch: 'main', url: 'https://github.com/SaravanaNani/Docker-GCP.git'
+            }
+        }
+        stage('build') {
+            steps {
+                sh 'docker build -t img:v${BUILD_NUMBER} .'
+            }
+        }
+        stage('delete all .tar files') {
+            steps {
+                sh 'rm -rf *.tar'
+            }
+        }
+        stage('image to tar'){
+            steps{
+                sh 'docker save -o images${BUILD_NUMBER}.tar img:v${BUILD_NUMBER}'
+            }
+            
+        }
+        stage('pushing to bucket') {
+            steps {
+                googleStorageUpload bucket: 'gs://BUCKET-NAME', credentialsId: 'JSON-KEY-ID', pattern: 'image*.tar'
+            }
+        }
+        
+    }
+}
+------------------------------------------------------------------------------------------------------------------------------------------
+PLUGIN: Google Cloud Storage
+PIPELINE CODE EXPLAINATION:
+* STAGE1: Checkout.
+* STAGE2: Building image.
+* STAGE3: Deleting all ".tar" files.
+* STAGE4: Converting image to ".tar" file.
+* Pushing to bucket:
