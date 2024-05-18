@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+      
+       environment { 
+         MY_PASSWORD = credentials('GIVE_JENKINS_PASSWORD_ID-HERE')
+         GOOGLE_APPLICATION_CREDENTIALS = credentials('JSON-KEY-ID') // Jenkins secret FILE ID HERE - GCP service account key
+
+     } 
+
+    stages {
+        stage('configure') {
+            steps {
+                sh'gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS'
+                sh'gcloud auth configure-docker us-central1-docker.pkg.dev' // CHANGE THE REGION
+            }
+        }
+        stage('copy Dockerfile to jenkins workspace'){
+           steps{
+              sh 'echo $MY_PASSWORD | sudo -S  cp /root/Dockerfile .'
+           }
+        }
+        stage('build'){
+            steps{
+                sh 'docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/$ARTIFACT-REPO-NAME/img:v${BUILD_NUMBER} .'  // Change region, repository, image 
+            }
+        }
+        stage('pushing image to registry'){
+            steps{
+            sh 'docker push us-central1-docker.pkg.dev/$PROJECT_ID/$ARTIFACT-REPO-NAME/img:v${BUILD_NUMBER}'    // Change region, repository, image
+            }
+        }
+    }
+}
