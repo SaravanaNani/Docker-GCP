@@ -1,0 +1,21 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Pulling image') {
+            steps {
+                sh 'docker pull us-central1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE:TAG' // Change region, repository, image 
+            }
+        }
+        stage('tagging image to small name') {
+            steps {
+                sh 'docker tag us-central1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE:TAG' $IMG:TAG' // Here we are converting image name from big name to small name
+            }
+        }
+        stage('Deploying container') {
+            steps {
+                sh 'docker run -itd --name $CONTAINER_NAME -p 8084:80 $IMAGE:TAG'
+            }
+        }
+    }
+}
